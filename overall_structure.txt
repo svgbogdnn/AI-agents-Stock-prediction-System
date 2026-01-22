@@ -1,0 +1,142 @@
+├── .pids/
+│   └── .gitkeep
+|
+├── agents/
+│   ├── __init__.py
+│   ├── agent_engine_orchestrator.py
+│   ├── cloud_orchestrator.py
+│   ├── full_a2a_orchestrator.py
+│   ├── fundamental_analyst_server.py
+│   ├── kaggle_orchestrator.py
+│   ├── macro_analyst_server.py
+│   ├── news_sentiment_analyst_server.py
+│   ├── predictor_agent_server.py
+│   ├── production_orchestrator.py
+│   ├── regulatory_analyst_server.py
+│   ├── simple_orchestrator.py
+│   ├── strategist_orchestrator.py
+│   └── technical_analyst_server.py
+|
+├── config/
+│   ├── __init__.py
+│   ├── agent_prompts.py
+│   └── schemas.py
+|
+├── deploy/
+│   ├── vertex-ui/
+│   │   ├── app.yaml
+│   │   ├── index.html
+│   │   ├── main.py
+│   │   └── requirements.txt
+|   |
+│   ├── agent-engine-config.yaml
+│   ├── cloudbuild-chatbot.yaml
+│   ├── cloudbuild.yaml
+│   ├── deploy-vertex-ui.sh
+│   ├── deploy.sh
+│   ├── Dockerfile.agent
+│   ├── Dockerfile.chatbot
+│   ├── Dockerfile.orchestrator
+│   ├── Dockerfile.registry
+│   ├── test-deployment.sh
+│   └── vertex-agent-config.yaml
+|
+├── frontend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── agent-explanation/
+│   │   │   │   └── route.ts
+│   │   │   ├── analyze/
+│   │   │   │   └── route.ts
+│   │   │   └── investor-advice/
+│   │   │       └── route.ts
+│   │   ├── capabilities/
+│   │   │   └── page.tsx
+│   │   ├── compare/
+│   │   │   └── page.tsx
+│   │   ├── components/
+│   │   │   ├── AgentCard.tsx
+│   │   │   ├── AgentDetailModal.tsx
+│   │   │   ├── AgentRadarChart.tsx
+│   │   │   ├── AnalysisDetailView.tsx
+│   │   │   ├── CapabilityChecklist.tsx
+│   │   │   ├── ConfidenceGauge.tsx
+│   │   │   ├── InfoTooltip.tsx
+│   │   │   ├── InvestorAdvisorCard.tsx
+│   │   │   ├── OrchestratorCard.tsx
+│   │   │   ├── ResultsPanel.tsx
+│   │   │   ├── StockInput.tsx
+│   │   │   └── TradingViewWidget.tsx
+│   │   ├── history/
+│   │   │   └── page.tsx
+│   │   ├── types/
+│   │   │   └── index.ts
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── .gitignore
+│   ├── next-env.d.ts
+│   ├── next.config.js
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── tsconfig.json
+|
+├── models/
+│   ├── __init__.py
+│   └── simple_predictor.py
+|
+├── notebooks/
+│   ├── kaggle_submission_complete.ipynb
+│   └── stock_analysis_comparison.png
+|
+├── pictures/
+│   ├── ...
+│   ├── ...
+│   └── ...
+|
+├── scripts/
+│   ├── __init__.py
+│   ├── auto_deploy.sh
+│   ├── auto_deploy_setup.sh
+│   ├── deploy_to_gcp.sh
+│   ├── quick_setup.sh
+│   ├── register_agents_to_engine.sh
+│   ├── setup_agent_engine_env.sh
+│   ├── start_all_agents.sh
+│   ├── start_chatbot.sh
+│   ├── start_full_system.ps1
+│   ├── start_full_system.sh
+│   ├── stop_all_agents.sh
+│   ├── stop_full_system.sh
+│   └── test_agent_engine.sh
+|
+├── tools/
+│   ├── __init__.py
+│   ├── fred_fetcher.py
+│   ├── news_fetcher.py
+│   ├── polygon_fetcher.py
+│   ├── sec_edgar_fetcher.py
+│   └── technical_indicators.py
+|
+├── .gitignore
+├── [add]_overall_structure.txt
+├── agent_registry.py
+├── chatbot_cloud.py
+├── chatbot_function_calling.py
+├── chatbot_ui.html
+├── create_full_notebook.py
+├── fix_agent_cards.sh
+├── frontend_api.py
+├── generate_demo_noninteractive.py
+├── generate_notebook_content.py
+├── main.py
+├── monitor_deploy.sh
+├── README.md
+├── requirements.txt
+├── requirements_chatbot.txt
+├── start_full_system.py
+├── test_consistency.py
+├── test_system.sh
+└── verify_setup.py

@@ -1,0 +1,28 @@
+# Orchestrator with FastAPI frontend
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY agents/ ./agents/
+COPY tools/ ./tools/
+COPY config/ ./config/
+COPY models/ ./models/
+COPY frontend_api.py .
+COPY main.py .
+
+# Environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:${PORT}/health')"
+
+# Run FastAPI orchestrator
+CMD uvicorn frontend_api:app --host 0.0.0.0 --port ${PORT}
+

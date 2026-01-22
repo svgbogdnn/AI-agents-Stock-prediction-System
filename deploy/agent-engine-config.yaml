@@ -1,0 +1,168 @@
+# Google Agent Engine Configuration
+# Deploy agents as A2A cards and use native orchestration
+
+apiVersion: v1
+kind: AgentEngineConfig
+metadata:
+  name: stock-prediction-system
+  display_name: "Stock Prediction Multi-Agent System"
+  description: "Production-grade stock analysis using specialized AI agents with native A2A protocol"
+
+# Orchestrator configuration
+orchestrator:
+  name: "stock_prediction_orchestrator"
+  display_name: "Stock Prediction Orchestrator"
+  model: "gemini-2.0-flash-exp"
+  temperature: 0.3
+  
+  system_instruction: |
+    You are the Strategist Orchestrator for a multi-agent stock prediction system.
+    
+    Your role is to:
+    1. Coordinate analysis from 5 specialist agents using native A2A protocol
+    2. Synthesize their insights into actionable recommendations
+    3. Provide clear, transparent reasoning
+    4. Assess confidence and risk levels
+    
+    You have access to the following specialist agents via Agent Engine:
+    - Fundamental Analyst: Financial metrics, valuations
+    - Technical Analyst: Price trends, indicators
+    - Sentiment Analyst: News and market sentiment
+    - Macro Analyst: Economic conditions
+    - Regulatory Analyst: Compliance and legal risks
+    
+    Always provide structured output with:
+    - recommendation (BUY/HOLD/SELL)
+    - confidence (0-100)
+    - risk_level (LOW/MEDIUM/HIGH)
+    - rationale (detailed explanation)
+
+# Specialist agents (registered as A2A cards)
+agents:
+  - name: "fundamental_analyst"
+    display_name: "Fundamental Analyst"
+    description: "Expert in financial metrics, valuations, and company fundamentals"
+    agent_card_url: "${FUNDAMENTAL_AGENT_CARD_URL}"
+    role: "specialist"
+    category: "financial_analysis"
+    
+  - name: "technical_analyst"
+    display_name: "Technical Analyst"
+    description: "Expert in price action, trends, and technical indicators"
+    agent_card_url: "${TECHNICAL_AGENT_CARD_URL}"
+    role: "specialist"
+    category: "technical_analysis"
+    
+  - name: "sentiment_analyst"
+    display_name: "News & Sentiment Analyst"
+    description: "Expert in news analysis and market sentiment"
+    agent_card_url: "${SENTIMENT_AGENT_CARD_URL}"
+    role: "specialist"
+    category: "sentiment_analysis"
+    
+  - name: "macro_analyst"
+    display_name: "Macro-Economic Analyst"
+    description: "Expert in macroeconomic factors and Federal Reserve policy"
+    agent_card_url: "${MACRO_AGENT_CARD_URL}"
+    role: "specialist"
+    category: "macro_analysis"
+    
+  - name: "regulatory_analyst"
+    display_name: "Industry & Regulatory Analyst"
+    description: "Expert in regulatory landscape and compliance"
+    agent_card_url: "${REGULATORY_AGENT_CARD_URL}"
+    role: "specialist"
+    category: "regulatory_analysis"
+    
+  - name: "predictor_agent"
+    display_name: "Predictor Agent"
+    description: "Synthesizes specialist reports into final predictions"
+    agent_card_url: "${PREDICTOR_AGENT_CARD_URL}"
+    role: "synthesizer"
+    category: "prediction"
+
+# Orchestration pattern
+orchestration:
+  pattern: "parallel_then_synthesis"
+  
+  phase1:
+    name: "parallel_specialist_analysis"
+    agents: ["fundamental_analyst", "technical_analyst", "sentiment_analyst", "macro_analyst", "regulatory_analyst"]
+    execution: "parallel"
+    timeout: 60
+    
+  phase2:
+    name: "synthesis_and_prediction"
+    agents: ["predictor_agent"]
+    execution: "sequential"
+    timeout: 90
+    depends_on: ["phase1"]
+
+# Deployment configuration
+deployment:
+  platform: "agent_engine"
+  region: "us-central1"
+  
+  compute:
+    memory: "2Gi"
+    cpu: "2"
+    timeout: 600
+    max_instances: 20
+    min_instances: 0  # Scale to zero when idle
+    
+  authentication:
+    type: "iam"  # Use IAM for production
+    
+  environment_variables:
+    GOOGLE_API_KEY: "from_secret_manager"
+    POLYGON_API_KEY: "from_secret_manager"
+    FRED_API_KEY: "from_secret_manager"
+    NEWS_API_KEY: "from_secret_manager"
+
+# Monitoring and observability
+monitoring:
+  enable_logging: true
+  enable_tracing: true
+  log_level: "INFO"
+  
+  metrics:
+    - name: "agent_invocation_latency"
+      type: "histogram"
+      description: "Time to invoke each agent via native A2A"
+    
+    - name: "orchestration_latency"
+      type: "histogram"
+      description: "Time to complete full orchestration"
+    
+    - name: "agent_calls_total"
+      type: "counter"
+      description: "Total number of agent invocations"
+    
+    - name: "agent_errors_total"
+      type: "counter"
+      description: "Total number of agent errors"
+    
+    - name: "a2a_protocol_errors"
+      type: "counter"
+      description: "A2A protocol errors"
+
+# Retry configuration (handled by native A2A)
+retry:
+  max_attempts: 3
+  initial_delay: 1
+  max_delay: 10
+  exponential_base: 2
+  
+# Rate limiting
+rate_limiting:
+  requests_per_minute: 60
+  burst_size: 10
+
+# Caching strategy
+caching:
+  enable: true
+  ttl_seconds: 300  # 5 minutes
+  cache_keys:
+    - "ticker"
+    - "horizon"
+

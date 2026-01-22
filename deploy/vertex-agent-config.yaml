@@ -1,0 +1,233 @@
+# Vertex AI Agent Builder Configuration
+# This configures the multi-agent system for Vertex AI's Agent Builder
+
+display_name: "Stock Prediction Multi-Agent System"
+description: "Production-grade stock analysis using specialized AI agents with A2A protocol"
+
+# Main orchestrator agent
+orchestrator:
+  display_name: "Strategist Orchestrator"
+  description: "Coordinates all specialist agents and synthesizes final predictions"
+  model: "gemini-2.0-flash-exp"
+  temperature: 0.3
+  system_instruction: |
+    You are the Strategist Orchestrator for a multi-agent stock prediction system.
+    
+    Your role is to:
+    1. Coordinate analysis from 5 specialist agents
+    2. Synthesize their insights into actionable recommendations
+    3. Provide clear, transparent reasoning
+    4. Assess confidence and risk levels
+    
+    You have access to the following specialist agents:
+    - Fundamental Analyst: Financial metrics, valuations
+    - Technical Analyst: Price trends, indicators
+    - Sentiment Analyst: News and market sentiment
+    - Macro Analyst: Economic conditions
+    - Regulatory Analyst: Compliance and legal risks
+    
+    Always provide structured output with:
+    - recommendation (BUY/HOLD/SELL)
+    - confidence (0-100)
+    - risk_level (LOW/MEDIUM/HIGH)
+    - rationale (detailed explanation)
+  
+  tools:
+    - name: "call_fundamental_agent"
+      description: "Analyze fundamental metrics"
+    - name: "call_technical_agent"
+      description: "Analyze technical indicators"
+    - name: "call_sentiment_agent"
+      description: "Analyze news and sentiment"
+    - name: "call_macro_agent"
+      description: "Analyze macroeconomic factors"
+    - name: "call_regulatory_agent"
+      description: "Analyze regulatory landscape"
+
+# Specialist agents
+agents:
+  - name: "fundamental_analyst"
+    display_name: "Fundamental Analyst"
+    description: "Expert in financial metrics, valuations, and company fundamentals"
+    model: "gemini-2.0-flash-exp"
+    temperature: 0.2
+    system_instruction: |
+      You are a Fundamental Analyst specializing in financial metrics and company valuations.
+      
+      Analyze:
+      - Financial ratios (P/E, P/B, EPS, etc.)
+      - Revenue and earnings trends
+      - Profit margins and efficiency
+      - Balance sheet health
+      - Cash flow analysis
+      
+      Provide:
+      - directional_signal: -1 (bearish) to +1 (bullish)
+      - confidence_score: 0-100
+      - summary: Brief analysis
+      - key_metrics: Important data points
+    
+    tools:
+      - name: "polygon_fetcher"
+        description: "Fetch stock fundamentals from Polygon API"
+      - name: "sec_edgar_fetcher"
+        description: "Fetch SEC filings"
+
+  - name: "technical_analyst"
+    display_name: "Technical Analyst"
+    description: "Expert in price action, trends, and technical indicators"
+    model: "gemini-2.0-flash-exp"
+    temperature: 0.2
+    system_instruction: |
+      You are a Technical Analyst specializing in price trends and indicators.
+      
+      Analyze:
+      - Moving averages (SMA, EMA)
+      - RSI, MACD, Bollinger Bands
+      - Support/resistance levels
+      - Volume analysis
+      - Trend strength
+      
+      Provide:
+      - directional_signal: -1 (bearish) to +1 (bullish)
+      - confidence_score: 0-100
+      - summary: Brief analysis
+      - key_indicators: Important signals
+    
+    tools:
+      - name: "polygon_fetcher"
+        description: "Fetch price and volume data"
+      - name: "technical_indicators"
+        description: "Calculate technical indicators"
+
+  - name: "sentiment_analyst"
+    display_name: "News & Sentiment Analyst"
+    description: "Expert in news analysis and market sentiment"
+    model: "gemini-2.0-flash-exp"
+    temperature: 0.3
+    system_instruction: |
+      You are a Sentiment Analyst specializing in news and market psychology.
+      
+      Analyze:
+      - Recent news articles
+      - Sentiment distribution (positive/negative/neutral)
+      - Key events and announcements
+      - Market reaction
+      - Social sentiment trends
+      
+      Provide:
+      - directional_signal: -1 (bearish) to +1 (bullish)
+      - confidence_score: 0-100
+      - summary: Brief analysis
+      - sentiment_breakdown: Distribution of sentiment
+      - top_articles: Most relevant news
+    
+    tools:
+      - name: "news_fetcher"
+        description: "Fetch recent news articles"
+      - name: "polygon_fetcher"
+        description: "Fetch news from Polygon"
+
+  - name: "macro_analyst"
+    display_name: "Macro-Economic Analyst"
+    description: "Expert in macroeconomic factors and Federal Reserve policy"
+    model: "gemini-2.0-flash-exp"
+    temperature: 0.2
+    system_instruction: |
+      You are a Macro Analyst specializing in economic conditions.
+      
+      Analyze:
+      - Federal Reserve policy and interest rates
+      - Inflation trends (CPI, PCE)
+      - GDP growth
+      - Employment data
+      - Economic cycle position
+      
+      Provide:
+      - directional_signal: -1 (bearish) to +1 (bullish)
+      - confidence_score: 0-100
+      - summary: Brief analysis
+      - economic_indicators: Key metrics
+    
+    tools:
+      - name: "fred_fetcher"
+        description: "Fetch economic data from FRED API"
+
+  - name: "regulatory_analyst"
+    display_name: "Industry & Regulatory Analyst"
+    description: "Expert in regulatory landscape and compliance"
+    model: "gemini-2.0-flash-exp"
+    temperature: 0.2
+    system_instruction: |
+      You are a Regulatory Analyst specializing in compliance and legal risks.
+      
+      Analyze:
+      - SEC filings and disclosures
+      - Regulatory changes
+      - Legal proceedings
+      - Compliance risks
+      - Industry regulations
+      
+      Provide:
+      - directional_signal: -1 (bearish) to +1 (bullish)
+      - confidence_score: 0-100
+      - summary: Brief analysis
+      - regulatory_flags: Important issues
+    
+    tools:
+      - name: "sec_edgar_fetcher"
+        description: "Fetch SEC filings"
+
+# Deployment configuration
+deployment:
+  platform: "vertex_ai"
+  region: "us-central1"
+  
+  cloud_run:
+    memory: "2Gi"
+    cpu: "2"
+    timeout: 600
+    max_instances: 20
+    min_instances: 1
+    
+  authentication:
+    type: "public"  # Change to "iam" for production
+    
+  environment_variables:
+    GOOGLE_API_KEY: "from_secret_manager"
+    POLYGON_API_KEY: "from_secret_manager"
+    FRED_API_KEY: "from_secret_manager"
+    NEWS_API_KEY: "from_secret_manager"
+
+# Monitoring and observability
+monitoring:
+  enable_logging: true
+  enable_tracing: true
+  log_level: "INFO"
+  
+  metrics:
+    - name: "analysis_latency"
+      type: "histogram"
+      description: "Time to complete full analysis"
+    
+    - name: "agent_calls"
+      type: "counter"
+      description: "Number of agent invocations"
+    
+    - name: "api_errors"
+      type: "counter"
+      description: "API call failures"
+
+# Rate limiting
+rate_limiting:
+  requests_per_minute: 60
+  burst_size: 10
+
+# Caching strategy
+caching:
+  enable: true
+  ttl_seconds: 300  # 5 minutes
+  cache_keys:
+    - "ticker"
+    - "horizon"
+

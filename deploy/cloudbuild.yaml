@@ -1,0 +1,223 @@
+# Google Cloud Build configuration for multi-agent deployment
+steps:
+  # Build agent base image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-agent-base'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/stock-agent-base:$BUILD_ID'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '-f'
+      - 'deploy/Dockerfile.agent'
+      - '.'
+
+  # Build orchestrator image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-orchestrator'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/stock-orchestrator:$BUILD_ID'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/stock-orchestrator:latest'
+      - '-f'
+      - 'deploy/Dockerfile.orchestrator'
+      - '.'
+
+  # Push agent base image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-agent-base'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/stock-agent-base'
+    waitFor: ['build-agent-base']
+
+  # Push orchestrator image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-orchestrator'
+    args:
+      - 'push'
+      - '--all-tags'
+      - 'gcr.io/$PROJECT_ID/stock-orchestrator'
+    waitFor: ['build-orchestrator']
+
+  # Deploy Fundamental Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-fundamental'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'fundamental-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=fundamental_analyst_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY,POLYGON_API_KEY=$$POLYGON_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY', 'POLYGON_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Deploy Technical Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-technical'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'technical-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=technical_analyst_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY,POLYGON_API_KEY=$$POLYGON_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY', 'POLYGON_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Deploy Sentiment Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-sentiment'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sentiment-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=news_sentiment_analyst_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY,POLYGON_API_KEY=$$POLYGON_API_KEY,NEWS_API_KEY=$$NEWS_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY', 'POLYGON_API_KEY', 'NEWS_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Deploy Macro Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-macro'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'macro-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=macro_analyst_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY,FRED_API_KEY=$$FRED_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY', 'FRED_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Deploy Regulatory Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-regulatory'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'regulatory-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=regulatory_analyst_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY,POLYGON_API_KEY=$$POLYGON_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY', 'POLYGON_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Deploy Predictor Agent to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-predictor'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'predictor-agent'
+      - '--image=gcr.io/$PROJECT_ID/stock-agent-base:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=AGENT_MODULE=predictor_agent_server,GOOGLE_API_KEY=$$GOOGLE_API_KEY'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=300'
+      - '--max-instances=10'
+      - '--min-instances=0'
+    secretEnv: ['GOOGLE_API_KEY']
+    waitFor: ['push-agent-base']
+
+  # Get Cloud Run URLs and deploy orchestrator with them
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'get-urls-and-deploy-orchestrator'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        FUNDAMENTAL_URL=$$(gcloud run services describe fundamental-agent --region=${_REGION} --format='value(status.url)')
+        TECHNICAL_URL=$$(gcloud run services describe technical-agent --region=${_REGION} --format='value(status.url)')
+        SENTIMENT_URL=$$(gcloud run services describe sentiment-agent --region=${_REGION} --format='value(status.url)')
+        MACRO_URL=$$(gcloud run services describe macro-agent --region=${_REGION} --format='value(status.url)')
+        REGULATORY_URL=$$(gcloud run services describe regulatory-agent --region=${_REGION} --format='value(status.url)')
+        PREDICTOR_URL=$$(gcloud run services describe predictor-agent --region=${_REGION} --format='value(status.url)')
+        
+        gcloud run deploy orchestrator \
+          --image=gcr.io/${PROJECT_ID}/stock-orchestrator:latest \
+          --platform=managed \
+          --region=${_REGION} \
+          --allow-unauthenticated \
+          --set-env-vars="GOOGLE_API_KEY=$$$$GOOGLE_API_KEY,POLYGON_API_KEY=$$$$POLYGON_API_KEY,FUNDAMENTAL_AGENT_URL=$${FUNDAMENTAL_URL},TECHNICAL_AGENT_URL=$${TECHNICAL_URL},SENTIMENT_AGENT_URL=$${SENTIMENT_URL},MACRO_AGENT_URL=$${MACRO_URL},REGULATORY_AGENT_URL=$${REGULATORY_URL},PREDICTOR_AGENT_URL=$${PREDICTOR_URL},CLOUD_DEPLOYMENT=true" \
+          --memory=2Gi \
+          --cpu=2 \
+          --timeout=600 \
+          --max-instances=20 \
+          --min-instances=1
+    secretEnv: ['GOOGLE_API_KEY', 'POLYGON_API_KEY']
+    waitFor: ['deploy-fundamental', 'deploy-technical', 'deploy-sentiment', 'deploy-macro', 'deploy-regulatory', 'deploy-predictor']
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/GOOGLE_API_KEY/versions/latest
+      env: 'GOOGLE_API_KEY'
+    - versionName: projects/$PROJECT_ID/secrets/POLYGON_API_KEY/versions/latest
+      env: 'POLYGON_API_KEY'
+    - versionName: projects/$PROJECT_ID/secrets/NEWS_API_KEY/versions/latest
+      env: 'NEWS_API_KEY'
+    - versionName: projects/$PROJECT_ID/secrets/FRED_API_KEY/versions/latest
+      env: 'FRED_API_KEY'
+
+substitutions:
+  _REGION: 'us-central1'
+
+images:
+  - 'gcr.io/$PROJECT_ID/stock-agent-base:latest'
+  - 'gcr.io/$PROJECT_ID/stock-orchestrator:latest'
+
+timeout: '3600s'
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+

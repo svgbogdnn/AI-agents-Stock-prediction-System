@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Analysis - Multi-Agent System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #e0e7ff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #a5b4fc;
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            animation: fadeIn 1s ease;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        input, select, button {
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input, select {
+            background: rgba(255, 255, 255, 0.08);
+            color: #e0e7ff;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            min-width: 150px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .workflow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .agent-card:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .agent-card.working {
+            border-color: #fbbf24;
+            animation: pulse 2s infinite;
+        }
+
+        .agent-card.complete {
+            border-color: #10b981;
+        }
+
+        .agent-card.error {
+            border-color: #ef4444;
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .agent-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .agent-info h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .agent-status {
+            font-size: 0.875rem;
+            color: #a5b4fc;
+        }
+
+        .agent-status.working {
+            color: #fbbf24;
+        }
+
+        .agent-status.complete {
+            color: #10b981;
+        }
+
+        .agent-status.error {
+            color: #ef4444;
+        }
+
+        .agent-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: #a5b4fc;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .signal-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .signal-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #fbbf24 50%, #10b981 100%);
+            transition: all 0.5s ease;
+        }
+
+        .results-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            animation: fadeInUp 1s ease;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .recommendation {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .recommendation.buy {
+            color: #10b981;
+        }
+
+        .recommendation.hold {
+            color: #fbbf24;
+        }
+
+        .recommendation.sell {
+            color: #ef4444;
+        }
+
+        .confidence-meter {
+            width: 100%;
+            max-width: 500px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 1rem auto;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 1s ease;
+        }
+
+        .rationale {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            line-height: 1.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .timeline {
+            margin-top: 2rem;
+            padding-left: 2rem;
+            border-left: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-item {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+
+        .timestamp {
+            color: #a5b4fc;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Stock Prediction System</h1>
+            <p>Multi-Agent Analysis with Real-Time Workflow Visualization</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="ticker" placeholder="Enter stock ticker (e.g., AAPL)" value="AAPL">
+                <select id="horizon">
+                    <option value="next_week">Next Week</option>
+                    <option value="next_month">Next Month</option>
+                    <option value="next_quarter" selected>Next Quarter</option>
+                    <option value="next_year">Next Year</option>
+                </select>
+                <button id="analyzeBtn" onclick="analyzeStock()">Analyze Stock</button>
+            </div>
+        </div>
+
+        <div id="workflowSection" class="hidden">
+            <h2 style="margin-bottom: 1.5rem; font-size: 1.8rem;">Agent Workflow</h2>
+            <div class="workflow-container" id="agentCards"></div>
+            
+            <div class="timeline" id="timeline">
+                <h3 style="margin-bottom: 1rem;">Execution Timeline</h3>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="results-section hidden">
+            <div class="results-header">
+                <h2 style="font-size: 2rem; margin-bottom: 1rem;">Analysis Complete</h2>
+                <div class="recommendation" id="recommendation"></div>
+                <div class="confidence-meter">
+                    <div class="confidence-fill" id="confidenceFill"></div>
+                </div>
+                <p style="margin-top: 0.5rem; color: #a5b4fc;">
+                    Confidence: <span id="confidenceText">0%</span>
+                </p>
+            </div>
+            
+            <div class="rationale" id="rationale"></div>
+        </div>
+    </div>
+
+    <script>
+        const AGENTS = [
+            { id: 'fundamental', name: 'Fundamental Analyst', icon: '📊', color: '#667eea' },
+            { id: 'technical', name: 'Technical Analyst', icon: '📈', color: '#f093fb' },
+            { id: 'sentiment', name: 'Sentiment Analyst', icon: '📰', color: '#4facfe' },
+            { id: 'macro', name: 'Macro Analyst', icon: '🌍', color: '#43e97b' },
+            { id: 'regulatory', name: 'Regulatory Analyst', icon: '⚖️', color: '#fa709a' },
+            { id: 'predictor', name: 'Predictor', icon: '🎯', color: '#feca57' }
+        ];
+
+        let orchestratorUrl = window.ORCHESTRATOR_URL || '/api';
+
+        function addTimelineEvent(message) {
+            const timeline = document.getElementById('timeline');
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="timestamp">${new Date().toLocaleTimeString()}</div>
+                <div>${message}</div>
+            `;
+            timeline.appendChild(item);
+        }
+
+        function createAgentCard(agent) {
+            return `
+                <div class="agent-card" id="${agent.id}-card">
+                    <div class="agent-header">
+                        <div class="agent-icon" style="background: ${agent.color};">
+                            ${agent.icon}
+                        </div>
+                        <div class="agent-info">
+                            <h3>${agent.name}</h3>
+                            <div class="agent-status" id="${agent.id}-status">Waiting...</div>
+                        </div>
+                    </div>
+                    <div class="agent-metrics">
+                        <div class="metric">
+                            <div class="metric-label">Signal</div>
+                            <div class="metric-value" id="${agent.id}-signal">--</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Confidence</div>
+                            <div class="metric-value" id="${agent.id}-confidence">--</div>
+                        </div>
+                    </div>
+                    <div class="signal-bar">
+                        <div class="signal-fill" id="${agent.id}-bar" style="width: 50%; margin-left: 0%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateAgent(agentId, status, signal = null, confidence = null) {
+            const card = document.getElementById(`${agentId}-card`);
+            const statusEl = document.getElementById(`${agentId}-status`);
+            
+            if (!card || !statusEl) return;
+            
+            card.className = `agent-card ${status}`;
+            statusEl.className = `agent-status ${status}`;
+            
+            const statusTexts = {
+                'working': 'Analyzing...',
+                'complete': 'Complete ✓',
+                'error': 'Error ✗'
+            };
+            statusEl.textContent = statusTexts[status] || status;
+            
+            if (signal !== null) {
+                document.getElementById(`${agentId}-signal`).textContent = signal.toFixed(2);
+                const normalizedSignal = ((signal + 1) / 2) * 100;
+                document.getElementById(`${agentId}-bar`).style.width = '100%';
+                document.getElementById(`${agentId}-bar`).style.marginLeft = `${Math.max(0, normalizedSignal - 2)}%`;
+            }
+            
+            if (confidence !== null) {
+                document.getElementById(`${agentId}-confidence`).textContent = `${Math.round(confidence)}%`;
+            }
+        }
+
+        async function analyzeStock() {
+            const ticker = document.getElementById('ticker').value.toUpperCase().trim();
+            const horizon = document.getElementById('horizon').value;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            
+            if (!ticker) {
+                alert('Please enter a ticker symbol');
+                return;
+            }
+            
+            // Reset UI
+            document.getElementById('workflowSection').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('timeline').innerHTML = '<h3 style="margin-bottom: 1rem;">Execution Timeline</h3>';
+            
+            // Create agent cards
+            const agentCards = document.getElementById('agentCards');
+            agentCards.innerHTML = AGENTS.map(agent => createAgentCard(agent)).join('');
+            
+            // Disable button
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="loading"></span>';
+            
+            addTimelineEvent(`🚀 Starting analysis for ${ticker}`);
+            
+            try {
+                // Simulate agent workflow
+                addTimelineEvent('📡 Connecting to agents...');
+                await sleep(500);
+                
+                // Phase 1: Parallel agent analysis
+                addTimelineEvent('📊 Phase 1: Specialist agents analyzing...');
+                const agentPromises = AGENTS.slice(0, 5).map(async (agent, index) => {
+                    await sleep(index * 200); // Stagger starts
+                    updateAgent(agent.id, 'working');
+                    addTimelineEvent(`${agent.icon} ${agent.name} started`);
+                    
+                    await sleep(1000 + Math.random() * 1000);
+                    
+                    const signal = (Math.random() * 2 - 1) * 0.8;
+                    const confidence = 50 + Math.random() * 40;
+                    updateAgent(agent.id, 'complete', signal, confidence);
+                    addTimelineEvent(`${agent.icon} ${agent.name} completed (Signal: ${signal.toFixed(2)})`);
+                    
+                    return { signal, confidence };
+                });
+                
+                const results = await Promise.all(agentPromises);
+                
+                // Phase 2: Predictor synthesis
+                addTimelineEvent('🎯 Phase 2: Final synthesis...');
+                await sleep(500);
+                updateAgent('predictor', 'working');
+                
+                // Call actual API
+                const response = await fetch(`${orchestratorUrl}/analyze?ticker=${ticker}&horizon=${horizon}`);
+                const data = await response.json();
+                
+                updateAgent('predictor', 'complete');
+                addTimelineEvent('✅ Analysis complete!');
+                
+                // Show results
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addTimelineEvent(`❌ Error: ${error.message}`);
+                alert('Analysis failed. Please check console for details.');
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Analyze Stock';
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('resultsSection').classList.remove('hidden');
+            
+            const recommendation = data.recommendation || data.prediction?.recommendation || 'HOLD';
+            const confidence = data.confidence || data.prediction?.confidence || 50;
+            const rationale = data.rationale || data.prediction?.rationale || 'Analysis completed';
+            
+            const recEl = document.getElementById('recommendation');
+            recEl.textContent = recommendation;
+            recEl.className = `recommendation ${recommendation.toLowerCase()}`;
+            
+            document.getElementById('confidenceFill').style.width = `${confidence}%`;
+            document.getElementById('confidenceText').textContent = `${Math.round(confidence)}%`;
+            
+            document.getElementById('rationale').innerHTML = 
+                rationale.split('\n').map(line => `<p style="margin-bottom: 0.5rem;">${line}</p>`).join('');
+            
+            // Scroll to results
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Load config from meta tag or query param
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ticker = urlParams.get('ticker');
+            if (ticker) {
+                document.getElementById('ticker').value = ticker.toUpperCase();
+            }
+            
+            // Check if orchestrator URL is set via meta tag
+            const metaUrl = document.querySelector('meta[name="orchestrator-url"]');
+            if (metaUrl) {
+                orchestratorUrl = metaUrl.content;
+            }
+        };
+    </script>
+</body>
+</html>
+

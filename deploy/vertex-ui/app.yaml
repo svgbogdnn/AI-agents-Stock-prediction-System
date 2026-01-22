@@ -1,0 +1,30 @@
+# Google App Engine configuration for UI
+runtime: python311
+service: stock-ui
+instance_class: F2
+
+# Automatic scaling
+automatic_scaling:
+  min_instances: 0
+  max_instances: 5
+  target_cpu_utilization: 0.65
+
+# Environment variables
+env_variables:
+  ORCHESTRATOR_URL: "https://orchestrator-REPLACE_ME.run.app"
+
+handlers:
+  # Serve static files
+  - url: /
+    static_files: index.html
+    upload: index.html
+
+  - url: /(.+)
+    static_files: \1
+    upload: .+
+
+  # Proxy API requests to Cloud Run
+  - url: /api/.*
+    script: auto
+    secure: always
+
