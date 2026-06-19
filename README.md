@@ -52,6 +52,15 @@ This problem is particularly relevant for enterprise workflows where data analys
 **Demo Video** 
 [Link](https://drive.google.com/file/d/1C2gG5xlK8BisekflrqyVRX-CtzsCPz09/view?usp=sharing)
 
+**Presentation**
+[Link](https://docs.google.com/presentation/d/16EOqdVyjtd7BRypl-cB1X9bm7MulPNwACgxNrMIo6oI/)
+
+<p align="center">
+  <img src="./pictures/pptx1.png" width="100%" alt="" />
+</p>
+
+---
+
 I built a **production-ready multi-agent stock prediction system** that addresses these challenges through specialized AI agents working in concert. The system uses Google's Agent Development Kit (ADK) and the Agent-to-Agent (A2A) Protocol v0.3.0 to coordinate 6 specialized agents, each an expert in their domain:
 
 1. **Fundamental Analyst** - Analyzes financial metrics, valuation ratios, and balance sheets
